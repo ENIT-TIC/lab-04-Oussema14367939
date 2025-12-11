@@ -1,0 +1,8 @@
+- docker stop books-api-container
+- docker ps -a
+- docker logs books-api-container
+- docker logs -f books-api-container (live)
+- docker logs -t books-api-container
+- docker exec books-api-container python --version
+- docker exec books-api-container pip list
+- 

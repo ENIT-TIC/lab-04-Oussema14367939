@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # API Flask basique
+  api-basic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: books-api-basic
+    ports:
+      - "5000:5000"
+    volumes:
+      - db-data:/app/data
+      - ./init_db.sql:/app/init_db.sql
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - books-network
+
+  # API Flask avec logging
+  api-with-logging:
+    build:
+      context: .
+      dockerfile: Dockerfile-with-logs
+    container_name: books-api-with-logs
+    ports:
+      - "5001:5000"
+    volumes:
+      - db-data-logs:/app/data
+      - logs-data:/app/logs
+      - ./init_db.sql:/app/init_db.sql
+    environment:
+      - FLASK_APP=app_with_logging.py
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - books-network
+
+volumes:
+  # Volume pour la base de données de l'API basique
+  db-data:
+    driver: local
+  
+  # Volume pour la base de données de l'API avec logging
+  db-data-logs:
+    driver: local
+  
+  # Volume pour les logs
+  logs-data:
+    driver: local
+
+networks:
+  books-network:
+    driver: bridge

@@ -1,0 +1,96 @@
+1. Base de données SQLite (init_db.sql)
+
+```
+-- Create books table
+CREATE TABLE IF NOT EXISTS books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    year INTEGER NOT NULL
+);
+
+-- Insert initial data
+INSERT INTO books (title, author, year) VALUES
+    ('1984', 'George Orwell', 1949),
+    ('To Kill a Mockingbird', 'Harper Lee', 1960),
+    ('The Great Gatsby', 'F. Scott Fitzgerald', 1925);
+
+```
+
+2. app.py modifié
+Remplacé le dictionnaire par SQLite
+Fonctions get_db_connection() et init_db()
+Toutes les routes utilisent maintenant la BD
+
+3. app_with_logging.py modifié
+Même transformation vers SQLite
+Conservation de tous les logs
+Logs d'initialisation de la BD
+
+4. Docker Compose (docker-compose.yaml)
+
+```
+version: '3.8'
+
+services:
+  # API Flask basique
+  api-basic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: books-api-basic
+    ports:
+      - "5000:5000"
+    volumes:
+      - db-data:/app/data
+      - ./init_db.sql:/app/init_db.sql
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - books-network
+
+  # API Flask avec logging
+  api-with-logging:
+    build:
+      context: .
+      dockerfile: Dockerfile-with-logs
+    container_name: books-api-with-logs
+    ports:
+      - "5001:5000"
+    volumes:
+      - db-data-logs:/app/data
+      - logs-data:/app/logs
+      - ./init_db.sql:/app/init_db.sql
+    environment:
+      - FLASK_APP=app_with_logging.py
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - books-network
+
+volumes:
+  # Volume pour la base de données de l'API basique
+  db-data:
+    driver: local
+  
+  # Volume pour la base de données de l'API avec logging
+  db-data-logs:
+    driver: local
+  
+  # Volume pour les logs
+  logs-data:
+    driver: local
+
+networks:
+  books-network:
+    driver: bridge
+
+```
+
+6. Script de test (db-test.py)
+Test de connexion à la BD via l'API
+Test des opérations CRUD complètes
+Test de persistance des données
+Interface interactive pour choisir l'API à tester

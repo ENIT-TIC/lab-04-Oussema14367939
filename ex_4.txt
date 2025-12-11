@@ -1,0 +1,44 @@
+```
+# Utiliser l'image Python officielle comme base
+FROM python:3.11-slim
+
+# Créer un utilisateur non-root pour exécuter l'application
+RUN groupadd -r apiuser && useradd -r -g apiuser apiuser
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /app
+
+# Copier d'abord requirements (pour un meilleur cache)
+COPY requirements.txt .
+
+# Installer les dépendances
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le code de l'application
+COPY app.py .
+
+# Changer le propriétaire des fichiers pour apiuser
+RUN chown -R apiuser:apiuser /app
+
+# Passer à l'utilisateur non-root
+USER apiuser
+
+# Exposer le port 5000
+EXPOSE 5000
+
+# Définir les variables d'environnement
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+
+# Exécuter l'application
+CMD ["python", "app.py"]
+```
+
+- docker build -t books-api-secure:latest -f Dockerfile-apiuser .
+- docker stop books-api-container
+- docker rm books-api-container
+- docker run -d -p 5000:5000 --name books-api-secure-container books-api-secure:latest
+- docker exec books-api-secure-container whoami
+- curl http://localhost:5000/health
+- python test_api.py
+- docker logs books-api-secure-container
